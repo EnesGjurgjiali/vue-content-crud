@@ -26,6 +26,7 @@ export const usePostsStore = defineStore('posts-store', {
 
   //methods
   actions: {
+    //Fetch post functionality
     getPosts() {
       fetch('http://localhost:3000/posts')
         .then((res) => res.json())
@@ -39,6 +40,7 @@ export const usePostsStore = defineStore('posts-store', {
         })
     },
 
+    //Add post functionality
     addPost(post) {
       const newPost = {
         title: post.title,
@@ -65,6 +67,8 @@ export const usePostsStore = defineStore('posts-store', {
           this.loading = false
         })
     },
+
+    //Delete functionality
     deletePost(id) {
       this.posts = this.posts.filter((post) => post.id !== id)
 
@@ -89,6 +93,30 @@ export const usePostsStore = defineStore('posts-store', {
         this.errMsg = err.message
         this.loading = false
       })
+    },
+
+    //Update functionality
+    updatePost(id, updatedFields) {
+      this.loading = true
+      fetch(`http://localhost:3000/posts/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedFields),
+      })
+        .then((res) => res.json())
+        .then((updatedPost) => {
+          const index = this.posts.findIndex((post) => post.id === id)
+          if (index !== -1) {
+            this.posts[index] = { ...this.posts[index], ...updatedPost }
+          }
+          this.loading = false
+        })
+        .catch((err) => {
+          this.errMsg = err.message
+          this.loading = false
+        })
     },
   },
 })

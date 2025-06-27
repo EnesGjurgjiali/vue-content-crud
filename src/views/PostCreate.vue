@@ -1,12 +1,12 @@
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, computed, onMounted, watch } from 'vue'
 import { usePostsStore } from '@/stores/posts'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import MyWrapper from '@/components/MyWrapper.vue'
 
-
-const router= useRouter()
+const router = useRouter()
 const postsStore = usePostsStore()
+const route = useRoute()
 
 const post = reactive({
   title: '',
@@ -17,8 +17,39 @@ const isFormValid = computed(() => {
   return post.title === '' || post.body === ''
 })
 
+const isEdit = computed(() => !!route.params.id)
+
+onMounted(() => {
+  if (isEdit.value) {
+    const existing = postsStore.posts.find((p) => p.id == route.params.id)
+    if (existing) {
+      post.title = existing.title
+      post.body = existing.body
+    } else {
+      postsStore.getPosts()
+    }
+  }
+})
+
+watch(
+  () => postsStore.posts,
+  (newPosts) => {
+    if (isEdit.value) {
+      const existing = newPosts.find((p) => p.id == route.params.id)
+      if (existing) {
+        post.title = existing.title
+        post.body = existing.body
+      }
+    }
+  },
+)
+
 const submit = () => {
-  postsStore.addPost(post)
+  if (isEdit.value) {
+    postsStore.updatePost(route.params.id, { title: post.title, body: post.body })
+  } else {
+    postsStore.addPost(post)
+  }
   router.push({ name: 'home' })
 }
 </script>
@@ -26,7 +57,7 @@ const submit = () => {
 <template>
   <MyWrapper>
     <form @submit.prevent="submit">
-      <h3>Create a new post</h3>
+      <h3>{{ isEdit ? 'Edit post' : 'Create a new post' }}</h3>
       <div>
         <label>Post Title</label>
         <input type="text" v-model="post.title" />
@@ -36,7 +67,7 @@ const submit = () => {
         <textarea rows="7" v-model="post.body"></textarea>
       </div>
       <div>
-        <button :disabled="isFormValid">Add</button>
+        <button :disabled="isFormValid">{{ isEdit ? 'Update' : 'Add' }}</button>
       </div>
     </form>
   </MyWrapper>

@@ -1,8 +1,9 @@
 <script setup>
 import { usePostsStore } from '@/stores/posts'
+import { useRouter } from 'vue-router'
 
 const postStore = usePostsStore()
-
+const router = useRouter()
 
 defineProps({
   post: {
@@ -10,7 +11,6 @@ defineProps({
     required: true,
   },
 })
-
 </script>
 
 <template>
@@ -19,7 +19,15 @@ defineProps({
       <span>Written by {{ post.author }} on {{ post.created_at }}</span>
       <div>
         <button @click="postStore.deletePost(post.id)" class="del material-icons">delete</button>
-        <button @click="postStore.savePost(post.id)" class="save material-icons">{{ post.is_saved ? 'bookmark' : 'bookmark_border' }}</button>
+        <button @click="postStore.savePost(post.id)" class="save material-icons">
+          {{ post.is_saved ? 'bookmark' : 'bookmark_border' }}
+        </button>
+        <button
+          @click="router.push({ name: 'post-edit', params: { id: post.id } })"
+          class="edit material-icons"
+        >
+          edit
+        </button>
       </div>
     </div>
     <h1>{{ post.title }}</h1>
@@ -51,6 +59,13 @@ defineProps({
     padding: 3px;
     background: #fff;
     color: #22c55e;
+    margin-left: 10px;
+  }
+  div .edit {
+    font-size: 20px;
+    padding: 3px;
+    background: #fff;
+    color: #f59e42;
     margin-left: 10px;
   }
 }
